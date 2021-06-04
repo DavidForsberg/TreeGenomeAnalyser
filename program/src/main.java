@@ -1,5 +1,7 @@
 public class main {
     public static void main(String[] args) {
-        System.out.print("Hello world");
+        Graph graph = new Graph();
+        graph.initGraph(Graph.Storage.ADJ_LIST);
+        graph.numberOfComponents();
     }
 }
