@@ -1,21 +1,13 @@
 import java.util.*;
 
 public class Graph {
-    private Storage selectedStorage = null;
-    private Storage adj_matrix = null;
     private HashMap<Integer, ArrayList<Integer>> adj_list = null;
     private static HashMap<Integer, Integer> visited;
 
     Graph() {
         visited = new HashMap<Integer, Integer>();
     }
-
-    public void initGraph(Storage storageMethod) {
-        if (storageMethod == Storage.ADJ_LIST) initAdjList();
-        else System.out.println("Invalid storage method, try selecting another.");
-    }
-
-
+    
     private Boolean isOverlapSufficient(int aLength, int aStart, int aEnd, int bLength, int bStart, int bEnd) {
         // Check if contig A and B are not "fully" overlapping the other contig,
         // in this case the edge does not count!
@@ -85,15 +77,12 @@ public class Graph {
 //    /*
 //        Traverse graph
 //     */
+    // Recursive
     private void findDFS(int vertex)
     {
         // Mark as visited
         visited.put(vertex,1);
 
-        // Print the vertex
-//         System.out.println("vertex " + vertex +
-//          " visited");
-//         System.out.println(this.visited);
         for(Integer child : adj_list.get(vertex))
         {
             if(visited.get(child) == 0){
@@ -102,6 +91,7 @@ public class Graph {
         }
     }
 
+    // Recursive
     public void numberOfComponents() {
         int ccCount = 0;
 
@@ -109,8 +99,8 @@ public class Graph {
         {
             if(visited.get(vertex) == 0)
             {
-                findDFS(vertex);
-
+//                findDFS(vertex);
+                DFSUtil(vertex);
                 ccCount++;
             }
         }
@@ -119,25 +109,67 @@ public class Graph {
         System.out.println("Number of cc component: " + ccCount);
     }
 
+    // Iterative
+    // prints all not yet visited vertices reachable from s
+    void DFSUtil(int currVertex)
+    {
+        // Create a stack for DFS
+        Stack<Integer> stack = new Stack<>();
 
-    //    Set<Integer> depthFirstTraversal(Integer root) {
-////        Set<Integer> visited = new LinkedHashSet<Integer>();
-////        Stack<Integer> stack = new Stack<Integer>();
-////        stack.push(root);
-////        while (!stack.isEmpty()) {
-////            Integer vertex = stack.pop();
-////            if (!visited.contains(vertex)) {
-////                visited.add(vertex);
-////                if (selectedStorage == Storage.ADJ_LIST) {
-////                    for (Integer v : getAdjVertices(vertex)) {
-////                        stack.push(vertex);
-////                    }
-////                }
-////            }
-////        }
-////
-////        return visited;
-//    }
+        // Push the current source node
+        stack.push(currVertex);
+
+        while(stack.empty() == false)
+        {
+            // Pop a vertex from stack and print it
+            currVertex = stack.peek();
+            stack.pop();
+
+            // Stack may contain same vertex twice. So
+            // we need to print the popped item only
+            // if it is not visited.
+            if(visited.get(currVertex) == 0)
+            {
+//                System.out.print(s + " ");
+                visited.put(currVertex, 1);
+            }
+
+            // Get all adjacent vertices of the popped vertex s
+            // If a adjacent has not been visited, then push it
+            // to the stack.
+            Iterator<Integer> itr = adj_list.get(currVertex).iterator();
+
+            while (itr.hasNext())
+            {
+                int v = itr.next();
+                if(visited.get(v) == 0)
+                    stack.push(v);
+            }
+
+        }
+    }
+
+    /*
+        Node degree distribution
+     */
+    public void nodeDegreeDistribution() {
+        // Node degree (number of neighbors), Number of vertexes
+        HashMap<Integer, Integer> distributionMap = new HashMap<Integer, Integer>();
+        for (int vertex : adj_list.keySet()) {
+            int degree = adj_list.get(vertex).size();
+            if (!distributionMap.containsKey(degree)) distributionMap.put(degree, 1);
+            else {
+                int numberOfNodes = distributionMap.containsKey(degree) ? distributionMap.get(degree) : 0;
+                distributionMap.put(degree, numberOfNodes + 1);
+            }
+        }
+
+        // Print the results!
+        System.out.println("-= Node Degree Distribution =-");
+        for (int nodeDegree : distributionMap.keySet()) {
+            System.out.println("Degree: " + nodeDegree + ", with: " + distributionMap.get(nodeDegree) + " number of nodes!");
+        }
+    }
 
     /*
         Utils - filereading, etc.
@@ -145,27 +177,6 @@ public class Graph {
     public Scanner loadData() {
         Scanner sc = new Scanner(System.in);
         return sc;
-//        ArrayList<Integer> nodes = new ArrayList<Integer>();
-//        ArrayList<String> contigBs = new ArrayList<String>();
-//
-//        while (sc.hasNext()) {
-//            String c = sc.nextLine();
-//            String[] splitRow = c.split("\\s+");
-////            System.out.println("Contig A: " + splitRow[0] + ", Contig B: " + splitRow[1] + "... Contig A as Integer ID: " + splitRow[1].hashCode());
-////            System.out.println(splitRow[1].hashCode() + ", " + splitRow[1]);
-//            if (splitRow[0].hashCode() == -1192129190) System.out.println("Found multiple: " + splitRow[0] + "with: " + splitRow[1]);
-//            nodes.add(splitRow[0].hashCode());
-//            contigBs.add(splitRow[1]);
-//        }
-//
-//        for (Integer node : nodes) {
-//            int occurrences = Collections.frequency(nodes, node);
-//            if (occurrences > 1) System.out.println(node);
-//        }
-//
-//        for (String contigB : contigBs) {
-//            System.out.println("Contig A found x times as Contig B: " + Collections.frequency(nodes, contigB.hashCode()));
-//        }
     }
 
     private void formatData() {
@@ -175,11 +186,6 @@ public class Graph {
     /*
         Utils - internal classes, enums, etc.
      */
-    enum Storage {
-        ADJ_MATRIX,
-        ADJ_LIST
-    }
-
     private class Vertex {
         int node;
         ArrayList<Vertex> neighbors;

@@ -3,5 +3,6 @@ public class main {
         Graph graph = new Graph();
         graph.initGraph(Graph.Storage.ADJ_LIST);
         graph.numberOfComponents();
+        graph.nodeDegreeDistribution();
     }
 }
