@@ -72,12 +72,12 @@ public class Graph {
             // Helpful process timer
             Integer[] timerMilestonesVals = new Integer[] { 10000000, 20000000, 30000000, 40000000, 50000000, 60000000 };
             List<Integer> timerMilestones = new ArrayList<>(Arrays.asList(timerMilestonesVals));
-            if (timerMilestones.contains(lineCounter)) System.out.println(lineCounter);
+            if (timerMilestones.contains(lineCounter)) System.out.println(lineCounter + " lines read.");
             lineCounter++;
         }
 
         this.adj_list = adj_list;
-        System.out.println("Complete! " + adj_list.entrySet().stream().count());
+        System.out.println("Complete! " + adj_list.entrySet().stream().count() + " number of vertices.");
     }
 
 //
@@ -100,7 +100,7 @@ public class Graph {
     }
 
     // Iterative
-    int DFSIterative(int currVertex)
+    private int DFSIterative(int currVertex)
     {
         int componentSize = 0;
         Stack<Integer> stack = new Stack<>();
@@ -146,9 +146,10 @@ public class Graph {
         {
             if(visited.get(vertex) == 0)
             {
-//                findDFS(vertex);
+//                DFSRecursive(vertex); // Recursive DFS
                 ccSize = DFSIterative(vertex);
                 ccCount++;
+
                 // Add component size to distribution
                 if (!componentSizeDistribution.containsKey(ccSize)) componentSizeDistribution.put(ccSize, 1);
                 else {
@@ -159,7 +160,7 @@ public class Graph {
         }
 
         // Print number of components
-        System.out.println("Number of cc component: " + ccCount);
+        System.out.println("Number of connected components: " + ccCount);
         // Print component size distribution
         this.componentSizeDistribution = componentSizeDistribution;
         System.out.println("-= Component Size Distribution =-");

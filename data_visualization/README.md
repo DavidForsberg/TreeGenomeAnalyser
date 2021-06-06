@@ -6,7 +6,7 @@ Running the scripts are *not needed*, but just an additional way to explore the 
 
 **Running the scripts**
 
-Required Python packages are Matplotlib.
+Required Python packages are Matplotlib and Pandas.
 
 To be able to run the visualization scripts, the user has to run the compiled JAR file of the main program with the argument *-save_output*
 
