@@ -1,13 +1,20 @@
+import java.io.FileWriter;
 import java.util.*;
 
 public class Graph {
-    private HashMap<Integer, ArrayList<Integer>> adj_list = null;
+    private HashMap<Integer, ArrayList<Integer>> adj_list;
     private static HashMap<Integer, Integer> visited;
+    private HashMap<Integer, Integer> componentSizeDistribution;
+    private HashMap<Integer, Integer> nodeDegreeDistribution;
 
     Graph() {
+        adj_list = new HashMap<Integer, ArrayList<Integer>>();
         visited = new HashMap<Integer, Integer>();
+        componentSizeDistribution = new HashMap<Integer, Integer>();
+        nodeDegreeDistribution = new HashMap<Integer, Integer>();
+        initAdjList();
     }
-    
+
     private Boolean isOverlapSufficient(int aLength, int aStart, int aEnd, int bLength, int bStart, int bEnd) {
         // Check if contig A and B are not "fully" overlapping the other contig,
         // in this case the edge does not count!
@@ -21,9 +28,8 @@ public class Graph {
     }
 
     /*
-        Storage methods
+        Initialize the graph with a adjacency list representation.
      */
-
     private void initAdjList() {
         HashMap<Integer, ArrayList<Integer>> adj_list = new HashMap<Integer, ArrayList<Integer>>();
 
@@ -45,6 +51,7 @@ public class Graph {
             int bEnd = Integer.parseInt(splitRow[10]);
             int bLength = Integer.parseInt(splitRow[11]);
 
+            // Add the new vertices and edges
             if (isOverlapSufficient(aLength, aStart, aEnd, bLength, bStart, bEnd)) {
                 if (!adj_list.containsKey(contigA)) {
                     adj_list.put(contigA, new ArrayList<Integer>());
@@ -62,9 +69,9 @@ public class Graph {
                 }
             }
 
+            // Helpful process timer
             Integer[] timerMilestonesVals = new Integer[] { 10000000, 20000000, 30000000, 40000000, 50000000, 60000000 };
             List<Integer> timerMilestones = new ArrayList<>(Arrays.asList(timerMilestonesVals));
-
             if (timerMilestones.contains(lineCounter)) System.out.println(lineCounter);
             lineCounter++;
         }
@@ -77,75 +84,87 @@ public class Graph {
 //    /*
 //        Traverse graph
 //     */
+
     // Recursive
-    private void findDFS(int vertex)
+    private void DFSRecursive(int vertex)
     {
-        // Mark as visited
+        // Mark vertex as visited
         visited.put(vertex,1);
 
         for(Integer child : adj_list.get(vertex))
         {
             if(visited.get(child) == 0){
-                findDFS(child);
+                DFSRecursive(child);
             }
         }
+    }
+
+    // Iterative
+    int DFSIterative(int currVertex)
+    {
+        int componentSize = 0;
+        Stack<Integer> stack = new Stack<>();
+
+        // Push the current vertex onto the stack
+        stack.push(currVertex);
+        componentSize += 1;
+
+        while(stack.empty() == false)
+        {
+            currVertex = stack.peek();
+            stack.pop();
+
+            if(visited.get(currVertex) == 0)
+            {
+                visited.put(currVertex, 1);
+            }
+
+            Iterator<Integer> itr = adj_list.get(currVertex).iterator();
+
+            while (itr.hasNext())
+            {
+                int v = itr.next();
+                if(visited.get(v) == 0) {
+                    stack.push(v);
+                    componentSize += 1;
+                }
+            }
+        }
+
+        return componentSize;
     }
 
     // Recursive
     public void numberOfComponents() {
         int ccCount = 0;
 
+        // Component size, number of components
+        HashMap<Integer, Integer> componentSizeDistribution = new HashMap<Integer, Integer>();
+        int ccSize = 0;
+
         for(Integer vertex : visited.keySet())
         {
             if(visited.get(vertex) == 0)
             {
 //                findDFS(vertex);
-                DFSUtil(vertex);
+                ccSize = DFSIterative(vertex);
                 ccCount++;
+                // Add component size to distribution
+                if (!componentSizeDistribution.containsKey(ccSize)) componentSizeDistribution.put(ccSize, 1);
+                else {
+                    int numberOfComponents = componentSizeDistribution.containsKey(ccSize) ? componentSizeDistribution.get(ccSize) : 0;
+                    componentSizeDistribution.put(ccSize, numberOfComponents + 1);
+                }
             }
         }
 
         // Print number of components
         System.out.println("Number of cc component: " + ccCount);
-    }
-
-    // Iterative
-    // prints all not yet visited vertices reachable from s
-    void DFSUtil(int currVertex)
-    {
-        // Create a stack for DFS
-        Stack<Integer> stack = new Stack<>();
-
-        // Push the current source node
-        stack.push(currVertex);
-
-        while(stack.empty() == false)
-        {
-            // Pop a vertex from stack and print it
-            currVertex = stack.peek();
-            stack.pop();
-
-            // Stack may contain same vertex twice. So
-            // we need to print the popped item only
-            // if it is not visited.
-            if(visited.get(currVertex) == 0)
-            {
-//                System.out.print(s + " ");
-                visited.put(currVertex, 1);
-            }
-
-            // Get all adjacent vertices of the popped vertex s
-            // If a adjacent has not been visited, then push it
-            // to the stack.
-            Iterator<Integer> itr = adj_list.get(currVertex).iterator();
-
-            while (itr.hasNext())
-            {
-                int v = itr.next();
-                if(visited.get(v) == 0)
-                    stack.push(v);
-            }
-
+        // Print component size distribution
+        this.componentSizeDistribution = componentSizeDistribution;
+        System.out.println("-= Component Size Distribution =-");
+        for (int componentSize : componentSizeDistribution.keySet()) {
+            System.out.println("Size: " + componentSize + ", with: " + componentSizeDistribution.get(componentSize) + " number of components!");
         }
     }
 
@@ -165,6 +184,7 @@ public class Graph {
         }
 
         // Print the results!
+        this.nodeDegreeDistribution = distributionMap;
         System.out.println("-= Node Degree Distribution =-");
         for (int nodeDegree : distributionMap.keySet()) {
             System.out.println("Degree: " + nodeDegree + ", with: " + distributionMap.get(nodeDegree) + " number of nodes!");
@@ -172,49 +192,63 @@ public class Graph {
     }
 
     /*
-        Utils - filereading, etc.
+        Load the data, returns the scanner.
      */
     public Scanner loadData() {
         Scanner sc = new Scanner(System.in);
         return sc;
     }
 
-    private void formatData() {
-
-    }
 
     /*
-        Utils - internal classes, enums, etc.
+        Save the distributions in a csv file located in the home data_visualization folder.
+        This method will only run when specifying the argument -save_output when running the compiled JAR file.
      */
-    private class Vertex {
-        int node;
-        ArrayList<Vertex> neighbors;
-        boolean visited;
+    public void saveOutput() {
+        // Node degree distribution
+        try {
+            FileWriter csvWriter = new FileWriter("node_degree_distribution.csv");
 
-        Vertex(int node, ArrayList<Vertex> neighbors) {
-            this.node = node;
-            this.neighbors = neighbors;
-            visited = false;
+            csvWriter.append("degree");
+            csvWriter.append(",");
+            csvWriter.append("amount");
+            csvWriter.append("\n");
+
+            for (int nodeDegree : this.nodeDegreeDistribution.keySet()) {
+                csvWriter.append(Integer.toString(nodeDegree));
+                csvWriter.append(",");
+                csvWriter.append(Integer.toString(this.nodeDegreeDistribution.get(nodeDegree)));
+                csvWriter.append("\n");
+            }
+
+            csvWriter.flush();
+            csvWriter.close();
+        } catch (Exception e) {
+            System.out.println("Error saving node degree distribution to CSV!");
         }
+        System.out.println("Node degree distribution saved as CSV!");
 
-        void visit() {
-            visited = true;
-        }
+        // Component size distribution
+        try {
+            FileWriter csvWriter = new FileWriter("component_size_distribution.csv");
 
-        void unvisit() {
-            visited = false;
-        }
+            csvWriter.append("size");
+            csvWriter.append(",");
+            csvWriter.append("amount");
+            csvWriter.append("\n");
 
-        int getNode() {
-            return node;
-        }
+            for (int componentSize : this.componentSizeDistribution.keySet()) {
+                csvWriter.append(Integer.toString(componentSize));
+                csvWriter.append(",");
+                csvWriter.append(Integer.toString(this.componentSizeDistribution.get(componentSize)));
+                csvWriter.append("\n");
+            }
 
-        ArrayList<Vertex> getNeighbors() {
-            return neighbors;
-        }
-
-        boolean isVisited() {
-            return visited;
+            csvWriter.flush();
+            csvWriter.close();
+            System.out.println("Component size distribution saved as CSV!");
+        } catch (Exception e) {
+            System.out.println("Error saving component size distribution to CSV!");
         }
     }
 }
