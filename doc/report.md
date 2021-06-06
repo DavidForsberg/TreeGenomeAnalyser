@@ -75,15 +75,17 @@ Which I believe is an accurate result. A lot of predicted edges were removed bec
 
 The data explanation gave the information that each vertex would have 2-5 neighbors on average, but some would have a lot more neighbors. This fits well with the given results with some outliers. Although the results gave an exceeding amount of vertexes with only one neighbor. 
 
-![](report_images\node_distr_v2.png)
+*node_degree_distr_image*
 
 Since a lot of the vertexes only have one edge, I would assume from reading some of the data, that some edges has a lot of neighbors without any additional ones. This explains some of the huge outliers. Many of the contig B's in the data file seems to occurring only once and these are counted as an own vertex, which could also be a reason for the number of nodes with degree 1.
 
-![](report_images\component_distr_v2.png)
+*component_size_distr_image*
 
 From the test results above I would expect the average component to look something like the subgraph/component below. Which would explain why so many of the nodes have only one neighbor. 
 
-![](report_images\ex_component.png)
+*example_component_image*
+
+
 
 **Considerations for professional usage**
 
